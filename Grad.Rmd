@@ -1,0 +1,36 @@
+---
+title: "Grad Proj"
+author: "Huma Meer"
+date: '2022-07-23'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(censusapi)
+
+```
+
+```{r}
+# Add key to .Renviron
+Sys.setenv(CENSUS_KEY="2af9f600486ef6ad342ed1e8a978c0956a70a52c")
+# Reload .Renviron
+readRenviron("~/.Renviron")
+# Check to see that the expected key is output in your R console
+Sys.getenv("CENSUS_KEY")
+```
+
+```{r}
+
+cbp <- getCensus( name = "cbp" ,
+           vintage = 2020,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","GEO_ID","GEO_ID_F","LFO","LFO_LABEL","CD","CSA","GEOCOMP","NAICS2017","NAICS2017_F","NAICS2017_LABEL","EMP","EMP_F","EMP_N","EMP_N_F", "EMPSZES","EMPSZES_LABEL","ESTAB","ESTAB_F","INDGROUP", "INDLEVEL","PAYANN", "PAYANN_N", "YEAR"),
+           region = "county:*",
+           show_call = TRUE)
+view(cbp)
+```
+
