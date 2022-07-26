@@ -33,4 +33,59 @@ cbp <- getCensus( name = "cbp" ,
            show_call = TRUE)
 view(cbp)
 ```
+Calculating the Average Annual Payroll Per Employeer by Industry for the DMV area only
+
+
+cbp_AP_dmv <- cbp_dmv %>% 
+  select(NAICS2017_LABEL,PAYANN, EMP) %>% 
+  group_by(NAICS2017_LABEL) %>% 
+  mutate(annual_payroll_per_employee= PAYANN/EMP) %>% 
+  arrange(desc(annual_payroll_per_employee)) %>% 
+  select(NAICS2017_LABEL,annual_payroll_per_employee)
+
+cbp_AP_dmv <- cbp_AP_dmv[!duplicated(cbp_AP_dmv), ]
+view(cbp_AP_dmv)
+
+Creating a plot
+```{r}
+
+data.frame(cbp_AP_dmv)%>% 
+  slice_head(n=10) %>% 
+  ggplot() +
+  geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))
+
+
+
+```
+
+
+```{r}
+
+#for US
+cbp_US <- getCensus( name = "cbp" ,
+           vintage = 2020,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","NAICS2017","NAICS2017_LABEL","PAYANN","EMP"),
+          region = "us")
+view(cbp_US)
+cbp_dmv <-as_tibble(cbp_US)
+
+cbp_AP <- cbp_US %>% 
+  select(NAICS2017_LABEL,PAYANN, EMP) %>% 
+  group_by(NAICS2017_LABEL) %>% 
+  mutate(annual_payroll_per_employee= PAYANN/EMP) %>% 
+  arrange(desc(annual_payroll_per_employee)) %>% 
+  select(NAICS2017_LABEL,annual_payroll_per_employee)
+
+cbp_AP <- cbp_AP[!duplicated(cbp_AP), ]
+view(cbp_AP)
+  
+```
+#Plot for US
+```{r}
+data.frame(cbp_AP)%>% 
+  slice_head(n=10) %>% 
+  ggplot() +
+  geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))
+```
 
