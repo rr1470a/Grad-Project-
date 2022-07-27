@@ -50,13 +50,16 @@ view(cbp_AP_dmv)
 
 Creating a plot for dmv only
 ```{r}
-
-data.frame(cbp_AP_dmv)%>% 
-  slice_head(n=10) %>% 
-  ggplot() +
-  geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))+
+dmv_api_plot <- data.frame(cbp10_AP_dmv)%>% 
+  ggplot(aes(y =reorder(NAICS2017_relabel, annual_payroll_per_employee), 
+             x = annual_payroll_per_employee)) +
+  geom_col()+
+  geom_text(aes(label=round(annual_payroll_per_employee, digits = 0)), vjust=-0.1, size=3.5) +
+  xlab("Annual Payroll per Employee ($1,000)") +
+  ggtitle("Top 10 Instudries in the DMV area by Average Payroll per Employee") +
   theme_minimal()+
   theme(axis.title.y = element_blank())
+dmv_api_plot
   
 
 
@@ -85,10 +88,17 @@ cbp_AP_US <- cbp_AP_US[!duplicated(cbp_AP_US), ]
 view(cbp_AP_US)
   
 
-data.frame(cbp_AP_US)%>% 
+US_AP_plot <- data.frame(cbp_AP_US)%>% 
   slice_head(n=10) %>% 
-  ggplot() +
+  ggplot(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee)) +
+  geom_col()+
+  geom_text(aes(label=round(annual_payroll_per_employee, digits = 0)),
+            nudge_x = 2.5, nudge_y = -0.1,
+            vjust = 0) +
+  xlab("Annual Payroll per Employee ($1,000)") +
+  ggtitle("Average Payroll per Employee for Top 10 Industries in the USA") +
   geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))+
   theme_minimal()+
   theme(axis.title.y = element_blank())
+US_AP_plot
 
