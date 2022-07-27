@@ -145,7 +145,7 @@ cbp_EMP_US <- cbp_US %>%
 cbp_EMP_US <- cbp_EMP_US[!duplicated(cbp_EMP_US), ]
 view(cbp_EMP_US)
 
-cbp_EMP_US2 <- cbp_EMP_dmv[1:10, ]
+cbp_EMP_US2 <- cbp_EMP_US[1:10, ]
 cbp_EMP_US2$industry <- c("Health care and social assistance",
                            "Professional, scientific, and technical services",
                            "Accommodation and food services",
