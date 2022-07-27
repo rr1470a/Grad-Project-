@@ -33,19 +33,18 @@ cbp_dmv <- getCensus( name = "cbp" ,
            key = Sys.getenv("CENSUS_KEY"),
            vars = c("NAME","NAICS2017","NAICS2017_LABEL","PAYANN","EMP"),
           region = "state:11,24,51")
-cbp_dmv
-cbp_dmv <-as_tibble(cbp_dmv)
 
 cbp_AP_dmv <- cbp_dmv %>% 
-  select(NAICS2017_LABEL,PAYANN, EMP) %>% 
-  group_by(NAICS2017_LABEL) %>% 
-  mutate(annual_payroll_per_employee= PAYANN/EMP) %>% 
-  arrange(desc(annual_payroll_per_employee)) %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumpayann= sum(PAYANN)) %>% 
+  mutate(sumemp=sum(EMP)) %>% 
+  mutate(annual_payroll_per_employee= sumpayann/sumemp) %>% 
   select(NAICS2017_LABEL,annual_payroll_per_employee)
 
 cbp_AP_dmv <- cbp_AP_dmv[!duplicated(cbp_AP_dmv), ]
 view(cbp_AP_dmv)
-
 
 ```
 
@@ -63,37 +62,33 @@ data.frame(cbp_AP_dmv)%>%
 
 
 ```
-
+FOR US
 
 ```{r}
 
-#for us
 cbp_US <- getCensus( name = "cbp" ,
            vintage = 2020,
            key = Sys.getenv("CENSUS_KEY"),
            vars = c("NAME","NAICS2017","NAICS2017_LABEL","PAYANN","EMP"),
           region = "us")
-view(cbp_US)
-cbp_dmv <-as_tibble(cbp_US)
 
-cbp_AP <- cbp_US %>% 
-  select(NAICS2017_LABEL,PAYANN, EMP) %>% 
-  group_by(NAICS2017_LABEL) %>% 
-  mutate(annual_payroll_per_employee= PAYANN/EMP) %>% 
-  arrange(desc(annual_payroll_per_employee)) %>% 
+cbp_AP_US <- cbp_US %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumpayann= sum(PAYANN)) %>% 
+  mutate(sumemp=sum(EMP)) %>% 
+  mutate(annual_payroll_per_employee= sumpayann/sumemp) %>% 
   select(NAICS2017_LABEL,annual_payroll_per_employee)
 
-cbp_AP <- cbp_AP[!duplicated(cbp_AP), ]
-view(cbp_AP)
+cbp_AP_US <- cbp_AP_US[!duplicated(cbp_AP_US), ]
+view(cbp_AP_US)
   
-```
 
-```
-#Plot for US
-```{r}
-data.frame(cbp_AP)%>% 
+data.frame(cbp_AP_US)%>% 
   slice_head(n=10) %>% 
   ggplot() +
-  geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))
-```
+  geom_col(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee))+
+  theme_minimal()+
+  theme(axis.title.y = element_blank())
 
