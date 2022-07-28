@@ -249,3 +249,59 @@ US_FIRM_plot <- data.frame(cbp_FIRM_us3)%>%
 US_FIRM_plot
 
 
+#Heat map for DMV, NUMBER OF ESTABLISHMENST BY COUNTIES
+```{r}
+
+cbp_US_ESTAB <- getCensus( name = "cbp" ,
+           vintage = 2019,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","ESTAB"),
+            region = "county:*",
+           regionin = "state:11,24,51")
+
+library(tigris)
+options(tigris_use_cache = TRUE)
+options(tigris_class = "sf")
+DCMDVA<- counties(c("DC","MD","VA"))
+DCMDVA_state <- states() %>% 
+  filter(STATEFP %in% c("11","24","51"))
+
+merged <-DCMDVA %>% 
+  left_join(cbp_US_ESTAB, by=c("STATEFP"="state", "COUNTYFP"="county" ))
+
+
+DC <- filter(DCMDVA_state, NAME == "District of Columbia") 
+notDC <- filter(DCMDVA_state, NAME != "District of Columbia")
+
+ggplot(data= merged)+
+  geom_sf(aes(fill=ESTAB), color="white",size = 0.4)+
+  geom_sf(data= DCMDVA_state,fill= NA, color="black")+
+  geom_sf_label(data = DC,
+    aes(label = STUSPS),
+    check_overlap = T)+
+  geom_sf_label(data = notDC,
+    aes(label = STUSPS),
+    check_overlap = T)+
+  annotate(
+   geom = "curve", x = -77.3, y = 39, xend = -80.1, yend = 39.5,
+    curvature = -.3, arrow = arrow(length = unit(2, "mm"))
+  )+
+  annotate(
+    geom = "text",
+    x = -80.6,
+    y = 39.7,
+    size = 3,
+    label = "Anne Arundel, MD",
+    color = "red"
+  )+
+  theme(panel.grid.major = element_line(colour = "transparent"))+
+  scale_fill_distiller(palette= "BuPu", direction = 1)+
+  labs(title = "Number of Establishments by County", 
+       caption = "Source: CBP")+
+  labs(x = "", y = "")+
+  theme(axis.text.x=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())
+```
+
