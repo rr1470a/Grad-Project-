@@ -147,23 +147,26 @@ view(cbp_EMP_US)
 
 cbp_EMP_US2 <- cbp_EMP_US[1:10, ]
 cbp_EMP_US2$industry <- c("Health care and social assistance",
-                           "Professional, scientific, and technical services",
                            "Accommodation and food services",
-                           "Waste Management", "Construction", 
+                           "Waste Management",
+                           "Professional, scientific, and technical services", 
+                           "Construction", 
+                           "Finance and insurance",
+                           "Wholesale trade", 
                            "Other services (except public administration)",
-                           "Finance and insurance", 
-                           "Educational Services",
-                           "Wholesale trade", "Information")
+                           "Educational services", "Information")
 
 US_EMP_plot <- data.frame(cbp_EMP_US2)%>% 
   ggplot(aes(y =reorder(industry, sumemp), x = sumemp)) +
   geom_col()+
-  geom_text(aes(label= sumemp), nudge_x = 50000) +
+  geom_text(aes(label= sumemp), nudge_x = 1500000) +
   xlab("Total Employees") +
   ggtitle("Top 10 Employers in the US by Industry") +
   theme_minimal()+
   theme(axis.title.y = element_blank())
 US_EMP_plot
+
+
 
 #Summary Plot for Industry with largest amount of firms in DMV area
 cbp_FIRM_dmv <- getCensus( name = "cbp" ,
@@ -244,4 +247,5 @@ US_FIRM_plot <- data.frame(cbp_FIRM_us3)%>%
   theme_minimal()+
   theme(axis.title.y = element_blank())
 US_FIRM_plot
+
 
