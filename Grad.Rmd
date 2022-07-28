@@ -165,3 +165,83 @@ US_EMP_plot <- data.frame(cbp_EMP_US2)%>%
   theme(axis.title.y = element_blank())
 US_EMP_plot
 
+#Summary Plot for Industry with largest amount of firms in DMV area
+cbp_FIRM_dmv <- getCensus( name = "cbp" ,
+                           vintage = 2020,
+                           key = Sys.getenv("CENSUS_KEY"),
+                           vars = c("NAME","STATE", "NAICS2017","NAICS2017_LABEL","EMP", "ESTAB"),
+                           region = "state:11,24,51")
+view(cbp_FIRM_dmv)
+
+cbp_FIRM_dmv2 <- cbp_FIRM_dmv %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_dmv2 <- cbp_FIRM_dmv2[!duplicated(cbp_FIRM_dmv2), ]
+cbp_FIRM_dmv3 <- cbp_FIRM_dmv2[1:10, ]
+cbp_FIRM_dmv3$NAICS2017_LABEL[6] <- "Waste Management"
+  
+DMV_FIRM_plot <- data.frame(cbp_FIRM_dmv3)%>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, sumestab), x = sumestab)) +
+  geom_col()+
+  geom_text(aes(label= sumestab), nudge_x = 3000) +
+  xlab("Total Number of Firms") +
+  ggtitle("Industries with the Most Firms in the DMV Area") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank())
+DMV_FIRM_plot
+
+
+#(firm count by state in DMV area)
+cbp_FIRM_STATE_dmv <- cbp_FIRM_dmv %>% 
+  as_tibble() %>% 
+  group_by(NAME) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  select(NAME, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_STATE_dmv <- cbp_FIRM_STATE_dmv[!duplicated(cbp_FIRM_STATE_dmv), ]
+view(cbp_FIRM_STATE_dmv)
+
+
+DMV_FIRM_State_Plot <- cbp_FIRM_STATE_dmv %>% 
+  ggplot(aes(y =reorder(NAME, sumestab), x = sumestab)) +
+  geom_col()+
+  geom_text(aes(label= sumestab), nudge_x = 60000) +
+  xlab("Total Number of Firms") +
+  ggtitle("Total Firms by State in the DMV Area") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank())
+DMV_FIRM_State_Plot
+
+#Summary Plot for Industry with largest amount of firms in USA
+cbp_FIRM_us <- getCensus( name = "cbp" ,
+                           vintage = 2020,
+                           key = Sys.getenv("CENSUS_KEY"),
+                           vars = c("NAME","STATE", "NAICS2017","NAICS2017_LABEL","EMP", "ESTAB"),
+                           region = "us")
+view(cbp_FIRM_us)
+
+cbp_FIRM_us2 <- cbp_FIRM_us %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_us2 <- cbp_FIRM_us2[!duplicated(cbp_FIRM_us2), ]
+cbp_FIRM_us3 <- cbp_FIRM_us2[1:10, ]
+cbp_FIRM_us3$NAICS2017_LABEL[8] <- "Waste Management"
+
+US_FIRM_plot <- data.frame(cbp_FIRM_us3)%>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, sumestab), x = sumestab)) +
+  geom_col()+
+  geom_text(aes(label= sumestab), nudge_x = 50000) +
+  xlab("Total Number of Firms") +
+  ggtitle("Industries with the Most Firms in the US") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank())
+US_FIRM_plot
+
