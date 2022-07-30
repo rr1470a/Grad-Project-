@@ -1,0 +1,382 @@
+---
+title: "Webscraping Project- Eagles95"
+author: "Huma Meer and Rebecca Rogers"
+date: "2022-07-30"
+output: word_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+### Data Source:
+
+The data used in this paper is [County Business Patterns
+Data](https://www.census.gov/programs-surveys/cbp.html) extracted from
+the Census Bureau website using an API and a census key. CBP is an
+annual series that provides subnational economic data by industry. This
+series includes the number of establishments, employment during the week
+of March 12, first quarter payroll, and annual payroll. Since the data
+is collected on the county level, all variables used in our analysis are
+also presented at the county level.
+
+### Data Exploration and Visualization: 
+
+For our analysis we worked on identifying the patterns in the business
+industries in the US as compared to the DMV area. Most of our
+visualization juxtaposes the patterns found in DMV to the ones found all
+over the US. Specifically, we created visualizations to asses and
+compare the Average Annual Payroll Per Employee in the top 10 industries
+in the DMV and in the US. Additionally, we tried to identify the top ten
+industries that employ the most number of employees, the top ten
+industries that have the most number of establishments and, the state
+level divisions of those establishments. This analysis helped us
+identify the dominant industries, states, and counties in the US, and in
+the DMV area in terms of the annual payroll, number of employees and
+number of establishments.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(censusapi)
+library(tigris)
+```
+
+```{r}
+Sys.setenv(CENSUS_KEY="2af9f600486ef6ad342ed1e8a978c0956a70a52c")
+readRenviron("~/.Renviron")
+Sys.getenv("CENSUS_KEY")
+```
+
+### Calculating the Average Annual Payroll Per Employee by Industry for the DMV area
+
+```{r}
+cbp_dmv <- getCensus( name = "cbp" ,
+           vintage = 2020,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","NAICS2017","NAICS2017_LABEL","PAYANN","EMP"),
+          region = "state:11,24,51")
+
+cbp_AP_dmv <- cbp_dmv %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumpayann= sum(PAYANN)) %>% 
+  mutate(sumemp=sum(EMP)) %>% 
+  mutate(annual_payroll_per_employee= sumpayann/sumemp) %>% 
+  select(NAICS2017, NAICS2017_LABEL,annual_payroll_per_employee)
+
+cbp_AP_dmv <- cbp_AP_dmv[!duplicated(cbp_AP_dmv), ]
+cbp_AP_dmv$NAICS2017_LABEL[10] <- "Mgmt of Companies"
+cbp_AP_dmv$NAICS2017_LABEL[9] <- "Scientific Services"
+cbp_AP_dmv$NAICS2017_LABEL[2] <- "Mining, Quarrying"
+cbp_AP_dmv$NAICS2017_LABEL[1] <- "Agriculture"
+cbp_AP_dmv$NAICS2017_LABEL[8] <- "Real Estate"
+
+```
+
+### Creating a plot for Average Annual Payroll Per Employee by Industry for the DMV area
+
+```{r}
+dmv_api_plot <- data.frame(cbp_AP_dmv)%>% 
+  slice_head(n=10) %>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), 
+             x = annual_payroll_per_employee)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label=round(annual_payroll_per_employee, digits = 0)),   nudge_x = 5.5, nudge_y = -0.1,vjust=-0.1, size=3.5) +
+  xlab("Annual Payroll per Employee ($1,000)") +
+  labs(title ="Top 10 Instudries in DMV \n by Average Payroll per Employee") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+dmv_api_plot
+```
+
+### Creating a plot for Average Annual Payroll Per Employee by Industry for the US
+
+```{r}
+cbp_US <- getCensus( name = "cbp" ,
+           vintage = 2020,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","NAICS2017","NAICS2017_LABEL","PAYANN","EMP"),
+          region = "us")
+
+cbp_AP_US <- cbp_US %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumpayann= sum(PAYANN)) %>% 
+  mutate(sumemp=sum(EMP)) %>% 
+  mutate(annual_payroll_per_employee= sumpayann/sumemp) %>% 
+  select(NAICS2017_LABEL,annual_payroll_per_employee)
+
+cbp_AP_US <- cbp_AP_US[!duplicated(cbp_AP_US), ]
+view(cbp_AP_US)
+cbp_AP_US$NAICS2017_LABEL[10] <- "Mgmt of Companies"
+cbp_AP_US$NAICS2017_LABEL[9] <- "Scientific Services"
+cbp_AP_US$NAICS2017_LABEL[2] <- "Mining, Quarrying"
+cbp_AP_US$NAICS2017_LABEL[1] <- "Agriculture"
+cbp_AP_US$NAICS2017_LABEL[8] <- "Real Estate"
+
+US_AP_plot <- data.frame(cbp_AP_US)%>% 
+  slice_head(n=10) %>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, annual_payroll_per_employee), x = annual_payroll_per_employee)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label=round(annual_payroll_per_employee, digits = 0)),
+            nudge_x = 4.5, nudge_y = -0.1,
+            vjust = 0) +
+  xlab("Annual Payroll per Employee ($1,000)") +
+  labs(title = "Top 10 Instudries in the US \n by Average Payroll per Employee") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+US_AP_plot
+
+```
+
+### Top 10 Employers in  DMV 
+
+```{r}
+cbp_EMP_dmv <- cbp_dmv %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumemp=sum(EMP)) %>%
+  mutate(sumemp=(sumemp/1000)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumemp) %>% 
+  arrange(desc(sumemp)) 
+cbp_EMP_dmv <- cbp_EMP_dmv[!duplicated(cbp_EMP_dmv), ]
+cbp_EMP_dmv2 <- cbp_EMP_dmv[1:10, ]
+cbp_EMP_dmv2$industry <- c("Health care and social assistance",
+                        "Professional, scientific services",
+                        "Accommodation and food services",
+                        "Waste Management", "Construction", 
+                        "Other services",
+                        "Finance and insurance", 
+                        "Educational Services",
+                        "Wholesale trade", "Information")
+cbp_EMP_dmv2
+
+DMV_EMP_plot <- data.frame(cbp_EMP_dmv2)%>% 
+  ggplot(aes(y =reorder(industry, sumemp), x = sumemp)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label= round(sumemp, digits =0)), nudge_x = 60) +
+  xlab("Total Employees (in 1000s)") +
+  ggtitle("Top 10 Employers in DMV \n by Industry") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+DMV_EMP_plot
+```
+
+### Top 10 Employers in the US
+
+```{r}
+cbp_EMP_US <- cbp_US %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumemp=sum(EMP)) %>% 
+    mutate(sumemp=(sumemp/1000)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumemp) %>% 
+  arrange(desc(sumemp))
+cbp_EMP_US <- cbp_EMP_US[!duplicated(cbp_EMP_US), ]
+cbp_EMP_US2 <- cbp_EMP_US[1:10, ]
+cbp_EMP_US2$industry <- c("Health care and social assistance",
+                           "Accommodation, food services",
+                           "Waste Management",
+                           "Professional, scientific services", 
+                           "Construction", 
+                           "Finance and insurance",
+                           "Wholesale trade", 
+                           "Other services",
+                           "Educational services", "Information")
+cbp_EMP_US2
+
+US_EMP_plot <- data.frame(cbp_EMP_US2)%>% 
+  ggplot(aes(y =reorder(industry, sumemp), x = sumemp)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label= round(sumemp, digits =0)), nudge_x = 2000, nudge_y = -0.1) +
+  xlab("Total Employees (in 1000s)") +
+  ggtitle("Top 10 Employers in the US \n by Industry") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+US_EMP_plot
+```
+
+### Summary Plot for Industries with largest number of establishments in DMV 
+
+```{r}
+cbp_FIRM_dmv <- getCensus( name = "cbp" ,
+                           vintage = 2020,
+                           key = Sys.getenv("CENSUS_KEY"),
+                           vars = c("NAME","STATE", "NAICS2017","NAICS2017_LABEL","EMP", "ESTAB"),
+                           region = "state:11,24,51")
+cbp_FIRM_dmv2 <- cbp_FIRM_dmv %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_dmv2 <- cbp_FIRM_dmv2[!duplicated(cbp_FIRM_dmv2), ]
+cbp_FIRM_dmv3 <- cbp_FIRM_dmv2[1:10, ]
+cbp_FIRM_dmv3$NAICS2017_LABEL[6] <- "Waste Management"
+cbp_FIRM_dmv3$NAICS2017_LABEL[1] <- "Professional, scientific services"
+cbp_FIRM_dmv3$NAICS2017_LABEL[3] <- "Other Services"
+DMV_FIRM_plot <- data.frame(cbp_FIRM_dmv3)%>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, sumestab), x = sumestab)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label= sumestab), nudge_x = 4000) +
+  xlab("Total Number of Establishments") +
+  ggtitle("Industries with the Most Establishments \n in DMV") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+DMV_FIRM_plot
+```
+
+### Firm Count by State in DMV Area
+
+```{r}
+cbp_FIRM_STATE_dmv <- cbp_FIRM_dmv %>% 
+  as_tibble() %>% 
+  group_by(NAME) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  mutate(sumestab=sumestab/1000) %>% 
+  select(NAME, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_STATE_dmv <- cbp_FIRM_STATE_dmv[!duplicated(cbp_FIRM_STATE_dmv), ]
+cbp_FIRM_STATE_dmv
+DMV_FIRM_State_Plot <- cbp_FIRM_STATE_dmv %>% 
+  ggplot(aes(y =reorder(NAME, sumestab), x = sumestab)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label= round(sumestab, digits=0)), nudge_x = 60) +
+  xlab("Total Number of Firms (in 1000s)") +
+  ggtitle("Total Establishments by State in the DMV Area") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+DMV_FIRM_State_Plot
+```
+
+### Summary Plot for Industry with largest number of Establishments in USA
+
+```{r}
+cbp_FIRM_us <- getCensus( name = "cbp" ,
+                           vintage = 2020,
+                           key = Sys.getenv("CENSUS_KEY"),
+                           vars = c("NAME","STATE", "NAICS2017","NAICS2017_LABEL","EMP", "ESTAB"),
+                           region = "us")
+cbp_FIRM_us2 <- cbp_FIRM_us %>% 
+  as_tibble() %>% 
+  filter(NAICS2017 %in% c("11","21","22","23","31","42","44","48","51","52","53","54","55","56","61","62","71","72", "81","99")) %>% 
+  group_by(NAICS2017) %>% 
+  mutate(sumestab=sum(ESTAB)) %>% 
+  mutate(sumestab=(ESTAB/1000)) %>% 
+  select(NAICS2017, NAICS2017_LABEL, sumestab) %>% 
+  arrange(desc(sumestab)) 
+cbp_FIRM_us2 <- cbp_FIRM_us2[!duplicated(cbp_FIRM_us2), ]
+cbp_FIRM_us3 <- cbp_FIRM_us2[1:10, ]
+cbp_FIRM_us3$NAICS2017_LABEL[8] <- "Waste Management"
+cbp_FIRM_us3$NAICS2017_LABEL[1] <- "Professional, scientific services"
+cbp_FIRM_us3$NAICS2017_LABEL[3] <- "Other Services"
+
+US_FIRM_plot <- data.frame(cbp_FIRM_us3)%>% 
+  ggplot(aes(y =reorder(NAICS2017_LABEL, sumestab), x = sumestab)) +
+  geom_col(fill="#92C5DE")+
+  geom_text(aes(label= round(sumestab, digits = 0)), nudge_x = 50) +
+  xlab("Total Number of Firms (in 1000s)") +
+  ggtitle("Industries with the Most Establishments \n in the US") +
+  theme_minimal()+
+  theme(axis.title.y = element_blank(),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+US_FIRM_plot
+
+```
+
+### Heat Map of DMV showing the number of establishments by County
+
+```{r}
+
+cbp_US_ESTAB <- getCensus( name = "cbp" ,
+           vintage = 2019,
+           key = Sys.getenv("CENSUS_KEY"),
+           vars = c("NAME","ESTAB"),
+            region = "county:*",
+           regionin = "state:11,24,51")
+
+options(tigris_use_cache = TRUE)
+options(tigris_class = "sf")
+DCMDVA<- counties(c("DC","MD","VA"))
+DCMDVA_state <- states() %>% 
+  filter(STATEFP %in% c("11","24","51"))
+
+merged <-DCMDVA %>% 
+  left_join(cbp_US_ESTAB, by=c("STATEFP"="state", "COUNTYFP"="county" ))
+
+
+DC <- filter(DCMDVA_state, NAME == "District of Columbia") 
+notDC <- filter(DCMDVA_state, NAME != "District of Columbia")
+
+ggplot(data= merged)+
+  geom_sf(aes(fill=ESTAB), color="white",size = 0.4)+
+  geom_sf(data= DCMDVA_state,fill= NA, color="black")+
+  geom_sf_label(data = DC,
+    aes(label = STUSPS))+
+  geom_sf_label(data = notDC,
+    aes(label = STUSPS))+
+  annotate(
+   geom = "curve", x = -77.3, y = 39, xend = -80.1, yend = 39.5,
+    curvature = -.3, arrow = arrow(length = unit(2, "mm"))
+  )+
+  annotate(
+    geom = "text",
+    x = -80.6,
+    y = 39.7,
+    size = 3,
+    label = "Anne Arundel, MD",
+    color = "red"
+  )+
+  theme(panel.grid.major = element_line(colour = "transparent"))+
+  scale_fill_distiller(palette= "BuPu", direction = 1)+
+  labs(title = "Number of Establishments by County", 
+       caption = "Source: CBP")+
+  labs(x = "", y = "")+
+  theme(axis.text.x=element_blank(), 
+        axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(), 
+        axis.ticks.y=element_blank())
+```
+
+### Scatter Plot for Number of Employees and Average Payroll per Employee by Industry in DMV area
+
+```{r}
+
+DMV_EMP_AP <- cbp_EMP_dmv %>% 
+  left_join(cbp_AP_dmv, by = "NAICS2017_LABEL")
+DMV_EMP_AP <- DMV_EMP_AP[!duplicated(DMV_EMP_AP), ]
+DMV_EMP_AP$labels <- c("Healthcare", "Professional Services",
+                       "Accomodation & Food", "Waste Management",
+                       "Construction", "Other Services",
+                       "Finance & Insurance", "Education", "Wholesale",
+                       "Information", "Management", "Art & Entertainment",
+                       "Real Estate", "Utilities", "Minerals", "Agricultural",
+                       "Not Classified")
+
+DMV_EMP_AP_plot <- DMV_EMP_AP %>% 
+  ggplot(aes(x = sumemp, y = annual_payroll_per_employee)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) +
+  geom_label(aes(label=labels), 
+            nudge_x = 0.25, nudge_y = 0.25, 
+            check_overlap = T,
+            size = 3) +
+  xlab("Total Employees") +
+  ylab("Average Payroll Per Employee ($1,000)") +
+  labs(main = "Total Employees and Average Payroll by Industry in DMV") +
+  theme_minimal()
+DMV_EMP_AP_plot
+```
