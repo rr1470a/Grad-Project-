@@ -305,3 +305,30 @@ ggplot(data= merged)+
         axis.ticks.y=element_blank())
 ```
 
+
+#Scatterplot for Number of Employees and API by Industry in DMV area
+DMV_EMP_AP <- cbp_EMP_dmv %>% 
+  left_join(cbp_AP_dmv, by = "NAICS2017_LABEL")
+DMV_EMP_AP <- DMV_EMP_AP[!duplicated(DMV_EMP_AP), ]
+DMV_EMP_AP$labels <- c("Healthcare", "Professional Services",
+                       "Accomodation & Food", "Waste Management",
+                       "Construction", "Other Services",
+                       "Finance & Insurance", "Education", "Wholesale",
+                       "Information", "Management", "Art & Entertainment",
+                       "Real Estate", "Utilities", "Minerals", "Agricultural",
+                       "Not Classified")
+view(DMV_EMP_AP)
+
+DMV_EMP_AP_plot <- DMV_EMP_AP %>% 
+  ggplot(aes(x = sumemp, y = annual_payroll_per_employee)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) +
+  geom_label(aes(label=labels), 
+            nudge_x = 0.25, nudge_y = 0.25, 
+            check_overlap = T,
+            size = 3) +
+  xlab("Total Employees") +
+  ylab("Average Payroll Per Employee") +
+  labs(main = "Total Employees and Average Payroll by Industry in DMV") +
+  theme_minimal()
+DMV_EMP_AP_plot
