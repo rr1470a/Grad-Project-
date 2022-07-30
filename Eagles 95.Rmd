@@ -12,27 +12,12 @@ editor_options:
 
 The data used in this paper is [County Business Patterns
 Data](https://www.census.gov/programs-surveys/cbp.html) extracted from
-the Census Bureau website using an API and a census key. CBP is an
-annual series that provides subnational economic data by industry. This
-series includes the number of establishments, employment during the week
-of March 12, first quarter payroll, and annual payroll. Since the data
-is collected on the county level, all variables used in our analysis are
-also presented at the county level.
+the Census Bureau website using an API and a census key. CBP is an annual series that provides subnational economic data by industry. This series includes the number of establishments, employment during the week of March 12 2020, first quarter payroll, and annual payroll. Since the data is collected at the county level, all variables used in our analysis are also presented at the county level for the year 2020.
+
 
 ### Data Exploration and Visualization: 
 
-For our analysis we worked on identifying the patterns in the business
-industries in the US as compared to the DMV area. Most of our
-visualization juxtaposes the patterns found in DMV to the ones found all
-over the US. Specifically, we created visualizations to asses and
-compare the Average Annual Payroll Per Employee in the top 10 industries
-in the DMV and in the US. Additionally, we tried to identify the top ten
-industries that employ the most number of employees, the top ten
-industries that have the most number of establishments and, the state
-level divisions of those establishments. This analysis helped us
-identify the dominant industries, states, and counties in the US, and in
-the DMV area in terms of the annual payroll, number of employees and
-number of establishments.
+For our analysis, we worked on identifying the patterns in the business industries in the US as compared to the DMV metro area. We focused our analysis on the top paying industries by Average Annual Payroll per Employee (AP). We then further analyzed the nature of the business environment in the DMV area that would contribute to the disparities in the AP including which industries had the most establishments and which were the top employers. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
